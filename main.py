@@ -21,18 +21,56 @@ TEMP_DIR = "temp"
 os.makedirs(TEMP_DIR, exist_ok=True)
 
 class ConvertRequest(BaseModel):
-    file_id: str  # Nombre del archivo en Supabase (ej: "01 - RTA.pdf")
+    file_id: str  # UUID del archivo en Supabase (ej: "2d319500-12ca-4ddf-993c-fdac13ad48ab")
     supabase_url: str  # URL del proyecto Supabase
     service_key: str  # Service role key
     bucket: str = "baseconocimiento.arca"  # Bucket name
 
-def download_from_supabase(file_id: str, supabase_url: str, service_key: str, bucket: str, output_path: str) -> bool:
-    """Descarga un archivo desde Supabase Storage"""
+def get_file_name_from_uuid(file_uuid: str, supabase_url: str, service_key: str, bucket: str) -> str:
+    """Obtiene el nombre del archivo desde su UUID usando la API de Supabase Storage"""
+    try:
+        # Listar todos los archivos del bucket
+        list_url = f"{supabase_url}/storage/v1/object/list/{bucket}"
+        
+        headers = {
+            'Authorization': f'Bearer {service_key}',
+            'apikey': service_key,
+            'Content-Type': 'application/json'
+        }
+        
+        body = {
+            "prefix": "",
+            "limit": 1000,
+            "offset": 0
+        }
+        
+        logger.info(f"Buscando archivo con UUID: {file_uuid}")
+        
+        response = requests.post(list_url, headers=headers, json=body, timeout=30)
+        response.raise_for_status()
+        
+        files = response.json()
+        
+        # Buscar el archivo por ID
+        for file in files:
+            if file.get('id') == file_uuid:
+                file_name = file.get('name')
+                logger.info(f"Archivo encontrado: {file_name}")
+                return file_name
+        
+        raise Exception(f"No se encontró archivo con UUID: {file_uuid}")
+        
+    except Exception as e:
+        logger.error(f"Error obteniendo nombre del archivo: {str(e)}")
+        raise
+
+def download_from_supabase(file_name: str, supabase_url: str, service_key: str, bucket: str, output_path: str) -> bool:
+    """Descarga un archivo desde Supabase Storage usando el nombre del archivo"""
     try:
         # Construir URL de descarga
-        download_url = f"{supabase_url}/storage/v1/object/{bucket}/{file_id}"
+        download_url = f"{supabase_url}/storage/v1/object/{bucket}/{file_name}"
         
-        logger.info(f"Descargando desde Supabase: {file_id}")
+        logger.info(f"Descargando desde Supabase: {file_name}")
         logger.info(f"URL: {download_url}")
         
         # Headers con autenticación de Supabase
@@ -133,9 +171,9 @@ async def root():
     return {
         "service": "PDF2JPG-Supabase Service",
         "version": "1.0.0",
-        "description": "Convierte PDFs desde Supabase Storage a imágenes JPG",
+        "description": "Convierte PDFs desde Supabase Storage a imágenes JPG usando UUID",
         "endpoints": {
-            "/convert": "POST - Convert PDF from Supabase to JPG ZIP",
+            "/convert": "POST - Convert PDF from Supabase to JPG ZIP using UUID",
             "/health": "GET - Health check"
         }
     }
@@ -147,18 +185,18 @@ async def health_check():
 @app.post("/convert")
 async def convert_pdf_from_supabase(request: ConvertRequest):
     """
-    Convierte un PDF desde Supabase Storage a imágenes JPG
+    Convierte un PDF desde Supabase Storage a imágenes JPG usando UUID
     
     Body:
     {
-        "file_id": "01 - RTA.pdf",
+        "file_id": "2d319500-12ca-4ddf-993c-fdac13ad48ab",
         "supabase_url": "https://xxx.supabase.co",
         "service_key": "eyJhbGci...",
         "bucket": "baseconocimiento.arca"
     }
     """
     
-    logger.info(f"Procesando archivo: {request.file_id}")
+    logger.info(f"Procesando archivo con UUID: {request.file_id}")
     
     # Crear directorio temporal
     session_id = str(uuid.uuid4())
@@ -166,11 +204,21 @@ async def convert_pdf_from_supabase(request: ConvertRequest):
     os.makedirs(temp_dir, exist_ok=True)
     
     try:
-        # 1. Descargar PDF desde Supabase
+        # 1. Obtener nombre del archivo desde UUID
+        file_name = get_file_name_from_uuid(
+            request.file_id,
+            request.supabase_url,
+            request.service_key,
+            request.bucket
+        )
+        
+        logger.info(f"Nombre del archivo: {file_name}")
+        
+        # 2. Descargar PDF desde Supabase
         pdf_path = os.path.join(temp_dir, "input.pdf")
         
         if not download_from_supabase(
-            request.file_id, 
+            file_name, 
             request.supabase_url, 
             request.service_key, 
             request.bucket, 
@@ -178,10 +226,10 @@ async def convert_pdf_from_supabase(request: ConvertRequest):
         ):
             raise HTTPException(
                 status_code=400,
-                detail=f"No se pudo descargar {request.file_id} desde Supabase"
+                detail=f"No se pudo descargar {file_name} desde Supabase"
             )
         
-        # 2. Convertir PDF a imágenes
+        # 3. Convertir PDF a imágenes
         image_paths = convert_pdf_to_images(pdf_path, temp_dir)
         
         if not image_paths:
@@ -190,7 +238,7 @@ async def convert_pdf_from_supabase(request: ConvertRequest):
                 detail="No se pudieron generar imágenes del PDF"
             )
         
-        # 3. Crear ZIP
+        # 4. Crear ZIP con todas las imágenes
         zip_path = os.path.join(temp_dir, "images.zip")
         if not create_zip_file(image_paths, zip_path):
             raise HTTPException(
@@ -198,13 +246,16 @@ async def convert_pdf_from_supabase(request: ConvertRequest):
                 detail="No se pudo crear el archivo ZIP"
             )
         
-        # 4. Devolver ZIP
+        # 5. Devolver ZIP
         logger.info(f"Conversión exitosa: {len(image_paths)} imágenes")
+        
+        # Nombre del ZIP basado en el nombre del archivo original
+        zip_filename = f'{file_name.replace(".pdf", "")}_images.zip'
         
         return FileResponse(
             path=zip_path,
             media_type='application/zip',
-            filename=f'{request.file_id.replace(".pdf", "")}_images.zip',
+            filename=zip_filename,
             background=lambda: cleanup_directory(temp_dir)
         )
         
