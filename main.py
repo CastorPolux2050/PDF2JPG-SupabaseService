@@ -22,6 +22,7 @@ os.makedirs(TEMP_DIR, exist_ok=True)
 
 class ConvertRequest(BaseModel):
     file_id: str  # UUID del archivo en Supabase (ej: "2d319500-12ca-4ddf-993c-fdac13ad48ab")
+    pdf_file_name: str #n nombre del documento
     supabase_url: str  # URL del proyecto Supabase
     service_key: str  # Service role key
     bucket: str = "baseconocimiento.arca"  # Bucket name
