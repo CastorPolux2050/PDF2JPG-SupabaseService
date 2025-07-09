@@ -1,24 +1,4 @@
-# 📦 PDF2JPG Service v2.0 - Dependencias de Producción
-# Optimizado para Railway y compatibilidad máxima
-
-# Framework web principal
 Flask==3.0.0
-Werkzeug==3.0.1
-
-# Procesamiento de PDF - Core functionality
 PyMuPDF==1.23.26
-
-# Procesamiento de imágenes - Core functionality  
 Pillow==10.1.0
-
-# Cliente HTTP para descargas
 requests==2.31.0
-
-# WSGI server para producción
-gunicorn==21.2.0
-
-# Utilidades del sistema (opcional pero recomendado)
-pathlib2==2.3.7.post1
-
-# Variables de entorno (opcional para desarrollo local)
-python-dotenv==1.0.0
