@@ -1,0 +1,200 @@
+# PDF2JPG Service - .gitignore
+
+# =====================================================================
+# 🔐 ARCHIVOS SENSIBLES (NUNCA COMMITEAR)
+# =====================================================================
+.env
+.env.local
+.env.production
+*.key
+*.pem
+secrets/
+config/production.py
+
+# =====================================================================
+# 🐍 PYTHON
+# =====================================================================
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# =====================================================================
+# 🧪 TESTING
+# =====================================================================
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+.pytest_cache/
+cover/
+
+# =====================================================================
+# 📁 DIRECTORIOS TEMPORALES
+# =====================================================================
+tmp/
+temp/
+.tmp/
+uploads/
+downloads/
+processed/
+*.tmp
+*.temp
+
+# =====================================================================
+# 📝 LOGS Y DEBUGGING
+# =====================================================================
+*.log
+logs/
+.logs/
+debug.log
+error.log
+access.log
+
+# =====================================================================
+# 🔧 HERRAMIENTAS DE DESARROLLO
+# =====================================================================
+
+# Virtual environments
+venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+.venv/
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# IPython
+profile_default/
+ipython_config.py
+
+# pyenv
+.python-version
+
+# pipenv
+Pipfile.lock
+
+# poetry
+poetry.lock
+
+# =====================================================================
+# 🐳 DOCKER
+# =====================================================================
+.dockerignore
+docker-compose.override.yml
+
+# =====================================================================
+# ☁️ CLOUD & DEPLOYMENT
+# =====================================================================
+
+# Railway
+.railway/
+
+# Vercel
+.vercel
+
+# Heroku
+.heroku/
+
+# AWS
+.aws/
+
+# =====================================================================
+# 💾 ARCHIVOS DE SISTEMA
+# =====================================================================
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon
+._*
+.DocumentRevisions-V100
+.fseventsd
+.Spotlight-V100
+.TemporaryItems
+.Trashes
+.VolumeIcon.icns
+.com.apple.timemachine.donotpresent
+.AppleDB
+.AppleDesktop
+Network Trash Folder
+Temporary Items
+.apdisk
+
+# Windows
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+*.stackdump
+[Dd]esktop.ini
+$RECYCLE.BIN/
+*.cab
+*.msi
+*.msix
+*.msm
+*.msp
+*.lnk
+
+# Linux
+*~
+.fuse_hidden*
+.directory
+.Trash-*
+.nfs*
+
+# =====================================================================
+# 📄 ARCHIVOS DE PRUEBA Y EJEMPLOS
+# =====================================================================
+test_files/
+sample_pdfs/
+*.pdf
+*.jpg
+*.jpeg
+*.png
+*.zip
+examples/output/
+
+# =====================================================================
+# 🔄 BACKUPS
+# =====================================================================
+*.bak
+*.backup
+*.old
+*.orig
+backup/
+backups/
